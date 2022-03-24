@@ -26,18 +26,18 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
@@ -57,8 +57,8 @@ import com.zhihu.matisse.internal.ui.widget.IncapableDialog;
 import com.zhihu.matisse.internal.utils.MediaStoreCompat;
 import com.zhihu.matisse.internal.utils.PathUtils;
 import com.zhihu.matisse.internal.utils.PhotoMetadataUtils;
-
 import com.zhihu.matisse.internal.utils.SingleMediaScanner;
+
 import java.util.ArrayList;
 
 /**
@@ -74,6 +74,9 @@ public class MatisseActivity extends AppCompatActivity implements
     public static final String EXTRA_RESULT_SELECTION = "extra_result_selection";
     public static final String EXTRA_RESULT_SELECTION_PATH = "extra_result_selection_path";
     public static final String EXTRA_RESULT_ORIGINAL_ENABLE = "extra_result_original_enable";
+    public static final String EXTRA_RESULT_ALBUM_SOURCE = "extra_result_album_source";
+    public static final int ALBUM_SOURCE_LOCAL = 0x01;
+    public static final int ALBUM_SOURCE_CAPTURE = 0x02;
     private static final int REQUEST_CODE_PREVIEW = 23;
     private static final int REQUEST_CODE_CAPTURE = 24;
     public static final String CHECK_STATE = "checkState";
@@ -98,6 +101,7 @@ public class MatisseActivity extends AppCompatActivity implements
         // programmatically set theme before super.onCreate()
         mSpec = SelectionSpec.getInstance();
         setTheme(mSpec.themeId);
+        setStatusBarFontColor();
         super.onCreate(savedInstanceState);
         if (!mSpec.hasInited) {
             setResult(RESULT_CANCELED);
@@ -208,9 +212,9 @@ public class MatisseActivity extends AppCompatActivity implements
                         selectedPaths.add(PathUtils.getPath(this, item.getContentUri()));
                     }
                 }
-                // todo 回传 requestCode
                 result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
                 result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPaths);
+                result.putExtra(EXTRA_RESULT_ALBUM_SOURCE, ALBUM_SOURCE_LOCAL);
                 result.putExtra(EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
                 setResult(RESULT_OK, result);
                 finish();
@@ -232,16 +236,17 @@ public class MatisseActivity extends AppCompatActivity implements
             ArrayList<String> selectedPath = new ArrayList<>();
             selectedPath.add(path);
             Intent result = new Intent();
-            // todo 回传 requestCode
             result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selected);
             result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPath);
+            result.putExtra(EXTRA_RESULT_ALBUM_SOURCE, ALBUM_SOURCE_CAPTURE);
             setResult(RESULT_OK, result);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
                 MatisseActivity.this.revokeUriPermission(contentUri,
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
             new SingleMediaScanner(this.getApplicationContext(), path, new SingleMediaScanner.ScanListener() {
-                @Override public void onScanFinish() {
+                @Override
+                public void onScanFinish() {
                     Log.i("SingleMediaScanner", "scan finish!");
                 }
             });
@@ -436,4 +441,15 @@ public class MatisseActivity extends AppCompatActivity implements
         }
     }
 
+    private void setStatusBarFontColor() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!isDarkMode()) {
+                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            }
+        }
+    }
+
+    private boolean isDarkMode() {
+        return this.getApplicationContext().getResources().getConfiguration().uiMode == 0x21;
+    }
 }
