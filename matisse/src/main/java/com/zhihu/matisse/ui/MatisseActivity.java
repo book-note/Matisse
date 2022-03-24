@@ -208,6 +208,7 @@ public class MatisseActivity extends AppCompatActivity implements
                         selectedPaths.add(PathUtils.getPath(this, item.getContentUri()));
                     }
                 }
+                // todo 回传 requestCode
                 result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selectedUris);
                 result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPaths);
                 result.putExtra(EXTRA_RESULT_ORIGINAL_ENABLE, mOriginalEnable);
@@ -231,6 +232,7 @@ public class MatisseActivity extends AppCompatActivity implements
             ArrayList<String> selectedPath = new ArrayList<>();
             selectedPath.add(path);
             Intent result = new Intent();
+            // todo 回传 requestCode
             result.putParcelableArrayListExtra(EXTRA_RESULT_SELECTION, selected);
             result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPath);
             setResult(RESULT_OK, result);
