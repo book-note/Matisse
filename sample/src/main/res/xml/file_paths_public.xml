@@ -18,4 +18,7 @@
     <external-path
         name="my_images"
         path="Pictures"/>
+    <external-files-path
+        name="my_camera_images"
+        path="matisse_camera"/>
 </paths>

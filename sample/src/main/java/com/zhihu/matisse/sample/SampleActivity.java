@@ -20,6 +20,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -66,7 +67,15 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     public void onClick(final View v) {
         RxPermissions rxPermissions = new RxPermissions(this);
-        rxPermissions.request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        String[] permissions = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissions =  new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO};
+        }else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q){
+            permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        }else{
+            permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        }
+        rxPermissions.request(permissions)
                 .subscribe(aBoolean -> {
                     if (aBoolean) {
                         startAction(v);
@@ -195,3 +204,4 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
     }
 
 }
+
