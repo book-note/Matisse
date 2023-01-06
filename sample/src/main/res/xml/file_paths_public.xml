@@ -20,5 +20,5 @@
         path="Pictures"/>
     <external-files-path
         name="my_camera_images"
-        path="matisse_camera"/>
+        path="Camera"/>
 </paths>

@@ -111,7 +111,7 @@ public class MediaStoreCompat {
         String timeStamp =
                 new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String imageFileName = String.format("JPEG_%s.jpg", timeStamp);
-        File storageDir = mContext.get().getExternalFilesDir("matisse_camera");
+        File storageDir = mContext.get().getExternalFilesDir("Camera");
         if (mCaptureStrategy.directory != null) {
             storageDir = new File(storageDir, mCaptureStrategy.directory);
             if (!storageDir.exists()) storageDir.mkdirs();
