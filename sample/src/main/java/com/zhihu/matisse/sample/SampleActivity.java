@@ -68,11 +68,11 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
     public void onClick(final View v) {
         RxPermissions rxPermissions = new RxPermissions(this);
         String[] permissions = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-            permissions =  new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO};
-        }else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q){
-            permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-        }else{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions = new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO};
+        } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE};
+        } else {
             permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
         }
         rxPermissions.request(permissions)
