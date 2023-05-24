@@ -58,7 +58,12 @@ public enum MimeType {
     WEBP("image/webp", arraySetOf(
             "webp"
     )),
-
+    HEIC("image/heic", arraySetOf(
+            "heic"
+    )),
+    HEIF("image/heif", arraySetOf(
+            "heif"
+    )),
     // ============== videos ==============
     MPEG("video/mpeg", arraySetOf(
             "mpeg",
