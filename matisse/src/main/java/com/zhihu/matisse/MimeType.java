@@ -95,9 +95,7 @@ public enum MimeType {
     )),
     AVI("video/avi", arraySetOf(
             "avi"
-    )),
-    HEIC("image/heic", arraySetOf("heic")),
-    HEIF("image/heif", arraySetOf("heif")),
+    ));
 
     private final String mMimeTypeName;
     private final Set<String> mExtensions;
