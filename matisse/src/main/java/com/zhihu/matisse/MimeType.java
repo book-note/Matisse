@@ -90,7 +90,9 @@ public enum MimeType {
     )),
     AVI("video/avi", arraySetOf(
             "avi"
-    ));
+    )),
+    HEIC("image/heic", arraySetOf("heic")),
+    HEIF("image/heif", arraySetOf("heif")),
 
     private final String mMimeTypeName;
     private final Set<String> mExtensions;
@@ -109,7 +111,7 @@ public enum MimeType {
     }
 
     public static Set<MimeType> ofImage() {
-        return EnumSet.of(JPEG, PNG, GIF, BMP, WEBP);
+        return EnumSet.of(JPEG, PNG, GIF, BMP, WEBP, HEIC, HEIF);
     }
 
     public static Set<MimeType> ofImage(boolean onlyGif) {
@@ -175,4 +177,4 @@ public enum MimeType {
         }
         return false;
     }
-}
+    }
