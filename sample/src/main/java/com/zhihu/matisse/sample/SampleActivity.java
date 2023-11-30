@@ -17,8 +17,10 @@ package com.zhihu.matisse.sample;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -48,11 +51,14 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
     private static final int REQUEST_CODE_CHOOSE = 23;
 
     private UriAdapter mAdapter;
+    private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mContext = this;
+
         findViewById(R.id.zhihu).setOnClickListener(this);
         findViewById(R.id.dracula).setOnClickListener(this);
         findViewById(R.id.only_gif).setOnClickListener(this);
@@ -68,20 +74,42 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
     public void onClick(final View v) {
         RxPermissions rxPermissions = new RxPermissions(this);
         String[] permissions = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissions = new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO};
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            permissions = new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED};
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED) {
+                startAction(v);
+                return;
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions = new String[]{Manifest.permission.READ_MEDIA_IMAGES};
         } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
             permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE};
         } else {
             permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
         }
+
+
         rxPermissions.request(permissions)
                 .subscribe(aBoolean -> {
                     if (aBoolean) {
                         startAction(v);
                     } else {
-                        Toast.makeText(SampleActivity.this, R.string.permission_request_denied, Toast.LENGTH_LONG)
-                                .show();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            boolean readMediaImagesIsGranted = ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+                            boolean readMediaVisualUserSelectedIsGranted = ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED;
+
+                            if (readMediaVisualUserSelectedIsGranted) {
+                                startAction(v);
+                            } else if (readMediaImagesIsGranted) {
+                                startAction(v);
+                            } else {
+                                Toast.makeText(SampleActivity.this, R.string.permission_request_denied, Toast.LENGTH_LONG)
+                                        .show();
+                            }
+                        } else {
+                            Toast.makeText(SampleActivity.this, R.string.permission_request_denied, Toast.LENGTH_LONG)
+                                    .show();
+                        }
                     }
                 }, Throwable::printStackTrace);
     }

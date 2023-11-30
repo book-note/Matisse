@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_pick_more"
+        android:icon="@drawable/outline_add_photo_alternate_24"
+        app:iconTint="?attr/toolbar.iconColor"
+        android:title="选择更多"
+        app:showAsAction="ifRoom" />
+</menu>

@@ -16,7 +16,7 @@
   -->
 <resources>
     <color name="zhihu_primary">#1E8AE8</color>
-    <color name="zhihu_primary_dark">#176EB9</color>
+    <color name="zhihu_primary_dark">@color/zhihu_primary</color>
 
     <color name="zhihu_album_popup_bg">#FFFFFF</color>
     <color name="zhihu_album_dropdown_title_text">#DE000000</color>
@@ -42,4 +42,5 @@
     <color name="zhihu_preview_bottom_toolbar_apply_text_disable">#4D0077D9</color>
 
     <color name="zhihu_check_original_radio_disable">#808080</color>
+    <color name="zhihu_icon">#2C2C2C</color>
 </resources>

@@ -15,8 +15,10 @@
  */
 package com.zhihu.matisse.ui;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.PorterDuff;
@@ -26,19 +28,25 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.zhihu.matisse.R;
 import com.zhihu.matisse.internal.entity.Album;
 import com.zhihu.matisse.internal.entity.Item;
@@ -69,7 +77,7 @@ public class MatisseActivity extends AppCompatActivity implements
         AlbumCollection.AlbumCallbacks, AdapterView.OnItemSelectedListener,
         MediaSelectionFragment.SelectionProvider, View.OnClickListener,
         AlbumMediaAdapter.CheckStateListener, AlbumMediaAdapter.OnMediaClickListener,
-        AlbumMediaAdapter.OnPhotoCapture {
+        AlbumMediaAdapter.OnPhotoCapture, Toolbar.OnMenuItemClickListener {
 
     public static final String EXTRA_RESULT_SELECTION = "extra_result_selection";
     public static final String EXTRA_RESULT_SELECTION_PATH = "extra_result_selection_path";
@@ -79,22 +87,27 @@ public class MatisseActivity extends AppCompatActivity implements
     public static final int ALBUM_SOURCE_CAPTURE = 0x02;
     private static final int REQUEST_CODE_PREVIEW = 23;
     private static final int REQUEST_CODE_CAPTURE = 24;
+    private static final int REQUEST_CODE_MEDIA_PERMISSION = 25;
+
     public static final String CHECK_STATE = "checkState";
     private final AlbumCollection mAlbumCollection = new AlbumCollection();
     private MediaStoreCompat mMediaStoreCompat;
-    private SelectedItemCollection mSelectedCollection = new SelectedItemCollection(this);
+    private final SelectedItemCollection mSelectedCollection = new SelectedItemCollection(this);
     private SelectionSpec mSpec;
 
+    private MenuItem mPickMorePhotos;
     private AlbumsSpinner mAlbumsSpinner;
     private AlbumsAdapter mAlbumsAdapter;
     private TextView mButtonPreview;
     private TextView mButtonApply;
+    private CoordinatorLayout mCoordinator;
     private View mContainer;
     private View mEmptyView;
 
     private LinearLayout mOriginalLayout;
     private CheckRadioView mOriginal;
     private boolean mOriginalEnable;
+    private Boolean mLastGrantedMediaPermission = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -109,7 +122,6 @@ public class MatisseActivity extends AppCompatActivity implements
             return;
         }
         setContentView(R.layout.activity_matisse);
-
         if (mSpec.needOrientationRestriction()) {
             setRequestedOrientation(mSpec.orientation);
         }
@@ -123,6 +135,7 @@ public class MatisseActivity extends AppCompatActivity implements
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setOnMenuItemClickListener(this);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -136,6 +149,8 @@ public class MatisseActivity extends AppCompatActivity implements
         mButtonApply = (TextView) findViewById(R.id.button_apply);
         mButtonPreview.setOnClickListener(this);
         mButtonApply.setOnClickListener(this);
+
+        mCoordinator = findViewById(R.id.coordinator);
         mContainer = findViewById(R.id.container);
         mEmptyView = findViewById(R.id.empty_view);
         mOriginalLayout = findViewById(R.id.originalLayout);
@@ -157,6 +172,67 @@ public class MatisseActivity extends AppCompatActivity implements
         mAlbumCollection.onCreate(this, this);
         mAlbumCollection.onRestoreInstanceState(savedInstanceState);
         mAlbumCollection.loadAlbums();
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        boolean currGrantedMediaPermission = isGrantedMediaPermission();
+        if (mLastGrantedMediaPermission != null && mLastGrantedMediaPermission != currGrantedMediaPermission) {
+            refresh();
+        }
+        mLastGrantedMediaPermission = isGrantedMediaPermission();
+
+        updatePickMorePhotoMenuVisibility();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.matisse_menu, menu);
+        mPickMorePhotos = menu.findItem(R.id.action_pick_more);
+        updatePickMorePhotoMenuVisibility();
+        mLastGrantedMediaPermission = isGrantedMediaPermission();
+        showGrantMediaPermissionTips();
+        return true;
+    }
+
+    private void updatePickMorePhotoMenuVisibility() {
+        if (mPickMorePhotos != null) {
+            mPickMorePhotos.setVisible(!isGrantedMediaPermission());
+        }
+    }
+
+    private boolean isGrantedMediaPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    private void showGrantMediaPermissionTips() {
+        if (!isGrantedMediaPermission()) {
+            Snackbar.make(mCoordinator, "仅可访问部分照片，点击右上角选择更多图片", Snackbar.LENGTH_LONG)
+                    .setActionTextColor(getColor(R.color.snack_action_text))
+                    .setAction("手动授权", v -> {
+                        goIntentSetting();
+                    })
+                    .show();
+        }
+    }
+
+    private void goIntentSetting() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", getPackageName(), null);
+        intent.setData(uri);
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -240,9 +316,6 @@ public class MatisseActivity extends AppCompatActivity implements
             result.putStringArrayListExtra(EXTRA_RESULT_SELECTION_PATH, selectedPath);
             result.putExtra(EXTRA_RESULT_ALBUM_SOURCE, ALBUM_SOURCE_CAPTURE);
             setResult(RESULT_OK, result);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-                MatisseActivity.this.revokeUriPermission(contentUri,
-                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
             new SingleMediaScanner(this.getApplicationContext(), path, new SingleMediaScanner.ScanListener() {
                 @Override
@@ -442,14 +515,44 @@ public class MatisseActivity extends AppCompatActivity implements
     }
 
     private void setStatusBarFontColor() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!isDarkMode()) {
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-            }
+        if (!isDarkMode()) {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
     }
 
     private boolean isDarkMode() {
         return this.getApplicationContext().getResources().getConfiguration().uiMode == 0x21;
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        if (item.getItemId() == R.id.action_pick_more) {
+            pickMorePhotos();
+        }
+        return true;
+    }
+
+    private void pickMorePhotos() {
+        requestPermissions(
+                new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO}
+                , REQUEST_CODE_MEDIA_PERMISSION);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_MEDIA_PERMISSION) {
+            refresh();
+        }
+    }
+
+    private void refresh() {
+        int position = mAlbumCollection.getCurrentSelection();
+        mAlbumsAdapter.getCursor().moveToPosition(position);
+        Album album = Album.valueOf(mAlbumsAdapter.getCursor());
+        if (album.isAll() && SelectionSpec.getInstance().capture) {
+            album.addCaptureCount();
+        }
+        onAlbumSelected(album);
     }
 }
