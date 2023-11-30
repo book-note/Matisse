@@ -510,7 +510,16 @@ public class MatisseActivity extends AppCompatActivity implements
     @Override
     public void capture() {
         if (mMediaStoreCompat != null) {
-            mMediaStoreCompat.dispatchCaptureIntent(this, REQUEST_CODE_CAPTURE);
+            if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                mMediaStoreCompat.dispatchCaptureIntent(this, REQUEST_CODE_CAPTURE);
+            } else {
+                Snackbar.make(mCoordinator, "相机开启失败，没有访问权限", Snackbar.LENGTH_LONG)
+                        .setActionTextColor(getColor(R.color.snack_action_text))
+                        .setAction("手动授权", v -> {
+                            goIntentSetting();
+                        })
+                        .show();
+            }
         }
     }
 
