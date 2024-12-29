@@ -43,6 +43,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
@@ -87,7 +88,9 @@ public class MatisseActivity extends AppCompatActivity implements
     public static final int ALBUM_SOURCE_CAPTURE = 0x02;
     private static final int REQUEST_CODE_PREVIEW = 23;
     private static final int REQUEST_CODE_CAPTURE = 24;
+
     private static final int REQUEST_CODE_MEDIA_PERMISSION = 25;
+    private static final int REQUEST_CODE_CAMERA_PERMISSION = 26;
 
     public static final String CHECK_STATE = "checkState";
     private final AlbumCollection mAlbumCollection = new AlbumCollection();
@@ -103,6 +106,7 @@ public class MatisseActivity extends AppCompatActivity implements
     private CoordinatorLayout mCoordinator;
     private View mContainer;
     private View mEmptyView;
+    private LinearLayout mCameraPermissionExplainLayout;
 
     private LinearLayout mOriginalLayout;
     private CheckRadioView mOriginal;
@@ -153,6 +157,7 @@ public class MatisseActivity extends AppCompatActivity implements
         mCoordinator = findViewById(R.id.coordinator);
         mContainer = findViewById(R.id.container);
         mEmptyView = findViewById(R.id.empty_view);
+        mCameraPermissionExplainLayout = findViewById(R.id.llCameraPermissionExplain);
         mOriginalLayout = findViewById(R.id.originalLayout);
         mOriginal = findViewById(R.id.original);
         mOriginalLayout.setOnClickListener(this);
@@ -266,6 +271,7 @@ public class MatisseActivity extends AppCompatActivity implements
         super.onBackPressed();
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -328,7 +334,6 @@ public class MatisseActivity extends AppCompatActivity implements
     }
 
     private void updateBottomToolbar() {
-
         int selectedCount = mSelectedCollection.count();
         if (selectedCount == 0) {
             mButtonPreview.setEnabled(false);
@@ -513,12 +518,8 @@ public class MatisseActivity extends AppCompatActivity implements
             if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 mMediaStoreCompat.dispatchCaptureIntent(this, REQUEST_CODE_CAPTURE);
             } else {
-                Snackbar.make(mCoordinator, "相机开启失败，没有访问权限", Snackbar.LENGTH_LONG)
-                        .setActionTextColor(getColor(R.color.snack_action_text))
-                        .setAction("手动授权", v -> {
-                            goIntentSetting();
-                        })
-                        .show();
+                showCameraPermissionExplain();
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_CAMERA_PERMISSION);
             }
         }
     }
@@ -552,6 +553,21 @@ public class MatisseActivity extends AppCompatActivity implements
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_MEDIA_PERMISSION) {
             refresh();
+        } else if (requestCode == REQUEST_CODE_CAMERA_PERMISSION) {
+            if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 权限被授予
+                mMediaStoreCompat.dispatchCaptureIntent(this, REQUEST_CODE_CAPTURE);
+                hideCameraPermissionExplain();
+            } else {
+                // 权限被拒绝
+                Snackbar.make(mCoordinator, "相机开启失败，没有访问权限", Snackbar.LENGTH_LONG)
+                        .setActionTextColor(getColor(R.color.snack_action_text))
+                        .setAction("手动授权", v -> {
+                            goIntentSetting();
+                        })
+                        .show();
+                hideCameraPermissionExplain();
+            }
         }
     }
 
@@ -563,5 +579,23 @@ public class MatisseActivity extends AppCompatActivity implements
             album.addCaptureCount();
         }
         onAlbumSelected(album);
+    }
+
+    private void showCameraPermissionExplain() {
+        mCameraPermissionExplainLayout.animate()
+                .alpha(1f)
+                .setDuration(400)
+                .withStartAction(() -> {
+                    mCameraPermissionExplainLayout.setVisibility(View.VISIBLE);
+                }).start();
+    }
+
+    private void hideCameraPermissionExplain() {
+        mCameraPermissionExplainLayout.animate()
+                .alpha(0f)
+                .setDuration(400)
+                .withEndAction(() -> {
+                    mCameraPermissionExplainLayout.setVisibility(View.GONE);
+                }).start();
     }
 }

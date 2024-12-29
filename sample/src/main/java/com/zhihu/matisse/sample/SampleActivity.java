@@ -36,7 +36,6 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.tbruyelle.rxpermissions2.RxPermissions;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.engine.impl.GlideEngine;
@@ -72,7 +71,6 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
     @SuppressLint("CheckResult")
     @Override
     public void onClick(final View v) {
-        RxPermissions rxPermissions = new RxPermissions(this);
         String[] permissions = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             permissions = new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED};
@@ -88,30 +86,27 @@ public class SampleActivity extends AppCompatActivity implements View.OnClickLis
             permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
         }
 
-
-        rxPermissions.request(permissions)
-                .subscribe(aBoolean -> {
-                    if (aBoolean) {
-                        startAction(v);
-                    } else {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                            boolean readMediaImagesIsGranted = ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
-                            boolean readMediaVisualUserSelectedIsGranted = ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED;
-
-                            if (readMediaVisualUserSelectedIsGranted) {
-                                startAction(v);
-                            } else if (readMediaImagesIsGranted) {
-                                startAction(v);
-                            } else {
-                                Toast.makeText(SampleActivity.this, R.string.permission_request_denied, Toast.LENGTH_LONG)
-                                        .show();
-                            }
-                        } else {
-                            Toast.makeText(SampleActivity.this, R.string.permission_request_denied, Toast.LENGTH_LONG)
-                                    .show();
-                        }
-                    }
-                }, Throwable::printStackTrace);
+        startAction(v);
+//        if (aBoolean) {
+//
+//        } else {
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+//                boolean readMediaImagesIsGranted = ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+//                boolean readMediaVisualUserSelectedIsGranted = ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED;
+//
+//                if (readMediaVisualUserSelectedIsGranted) {
+//                    startAction(v);
+//                } else if (readMediaImagesIsGranted) {
+//                    startAction(v);
+//                } else {
+//                    Toast.makeText(SampleActivity.this, R.string.permission_request_denied, Toast.LENGTH_LONG)
+//                            .show();
+//                }
+//            } else {
+//                Toast.makeText(SampleActivity.this, R.string.permission_request_denied, Toast.LENGTH_LONG)
+//                        .show();
+//            }
+//        }
     }
     // </editor-fold>
 

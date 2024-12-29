@@ -141,4 +141,35 @@
             android:textSize="16sp" />
 
     </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/llCameraPermissionExplain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar"
+        android:layout_margin="12dp"
+        android:visibility="gone"
+        android:background="@drawable/permission_explain_background"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp"
+            android:text="请允许使用您的相机权限"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginVertical="12dp"
+            android:lineSpacingMultiplier="1.2"
+            android:text="该权限用于访问您的相机，以便您拍摄照片并将其用于书籍封面、出版社图标、作者头像、笔记内容或自定义背景等用途。"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 </RelativeLayout>
